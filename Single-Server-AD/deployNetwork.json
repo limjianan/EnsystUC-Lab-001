@@ -13,7 +13,7 @@
             "metadata": {
                 "description": "The location of resources, such as templates and DSC modules, that the template depends on"
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/active-directory-new-domain"
+            "defaultValue": "https://raw.githubusercontent.com/limjianan/EnsystUC-Lab-001/master/Single-Server-AD/"
         },
         "_artifactsLocationSasToken": {
             "type": "securestring",
@@ -51,38 +51,101 @@
             }
         },
         "lbfe-port":{
-            "type": "string",
-            "defaultValue": "3389",
+            "type": "int",
+            "defaultValue": 3389,
             "metadata": {
                 "description": "front end lb port"
-            },
+            }
+        },
         "lbbe-port":{
-            "type": "string",
-            "defaultValue": "3389",
+            "type": "int",
+            "defaultValue": 3389,
             "metadata": {
                 "description": "back end lb port"
             }
         },
         "resourcePrefix":{
             "type": "string",
-            "DefaultValue":"[resourceGroup().name]"
+            "DefaultValue":"[resourceGroup().name]",
             "metadata": {
                 "description": "first few character"
             }
+        },
+        "vnetvar":{
+            "type": "string",
+            "DefaultValue":"01",
+            "metadata": {
+                "description": "Vnet ID number"
+            }
+        },
+        "virtualNetworkAddressRange":{
+            "type": "string",
+            "DefaultValue":"10.0.0.0/16",
+            "metadata": {
+                "description": "VNET range"
+            }
+        },
+        "subnetAddressPrefix":{
+            "type": "string",
+            "DefaultValue":"10.0.0.0/24",
+            "metadata": {
+                "description": "subnet range"
+            }
+        },
+        "subnetAddressvar":{
+            "type": "string",
+            "DefaultValue":"01",
+            "metadata": {
+                "description": "subnet name"
+            }
+        },
+        "NicIP":{
+            "type": "string",
+            "DefaultValue":"10.0.0.4",
+            "metadata": {
+                "description": "IP Adddress"
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+                        "metadata": {
+                "description": "The name of the administrator account of the new VM and domain"
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The password for the administrator account of the new VM and domain"
+            }
+        },
+        "domainName": {
+            "type": "string",
+            "metadata": {
+                "description": "The FQDN of the Active Directory Domain to be created"
+            }
+        },
+        "MachineName": {
+            "type": "string",
+            "defaultValue": "Server01",
+            "metadata": {
+                "description": "The machine Name to be created"
+            }
         }
-
 
         
         
         
     },
     "variables": {
-        "publicIPname": "[concat(parameters('resourcePrefix'),'-PIP-',parameters('publicIPvar')]",
-        "availabilitySetname": "[concat(parameters('resourcePrefix'),'-AS-',parameters('availabilitySetvar')]",
-        "loadbalancerName": "[concat(parameters('resourcePrefix'),'-LB-',parameters('LoadBalancervar')]",
-        "lbfe-name":"[concat(variables('loadbalancerName'),'-FE-',parameters('lbfe-port')]",
-        "lbbe-name":"[concat(variables('loadbalancerName'),'-BE-',parameters('lbbe-port')]",
-        "lbnat-name":"[concat('FE-',parameters('lbfe-port'),'-BE-',parameters('lbbe-port')]"
+        "publicIPname": "[concat(parameters('resourcePrefix'),'-PIP-',parameters('publicIPvar'))]",
+        "virtualNetworkName": "[concat(parameters('resourcePrefix'),'-VNET',parameters('vnetvar'))]",
+        "availabilitySetname": "[concat(parameters('resourcePrefix'),'-AS-',parameters('availabilitySetvar'))]",
+        "loadbalancerName": "[concat(parameters('resourcePrefix'),'-LB-',parameters('LoadBalancervar'))]",
+        "lbfe-name":"[concat(variables('loadbalancerName'),'-FE-',parameters('lbfe-port'))]",
+        "lbbe-name":"[concat(variables('loadbalancerName'),'-BE-',parameters('lbbe-port'))]",
+        "lbnat-name":"[concat('FE-',parameters('lbfe-port'),'-BE-',parameters('lbbe-port'))]",
+        "SubnetName":"[concat('Subnet-',replace(replace(parameters('subnetAddressvar'),'.','_'),'/','-Mask-'))]",
+        "NicIPname":"[concat('NIC-',replace(parameters('NicIP'),'.','_'))]"
 
         
     },
@@ -107,55 +170,179 @@
     "name": "[variables('availabilitySetname')]",
     "apiVersion": "2015-06-15",
     "location": "[resourceGroup().location]",
-    "tags": {
-        "displayName": "[variables('availabilitySetname')]"
-    },
-    "properties": {               
-        "PlatformUpdateDomainCount": 20,
-        "PlatformFaultDomainCount": 2},
-        "sku": {
-            "name": "Aligned"
+    "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+            "uri": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/availabilityset.json', parameters('_artifactsLocationSasToken'))]",
+            "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+ 
+            "availabilitySetvar": {
+                "value": "001"
             }
-    },  {
+
+            }
+        }
+    },
+    {
+        "type": "Microsoft.Resources/deployments",
+        "name": "VNet",
+        "apiVersion": "2016-02-01",
+        "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+                "uri": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
+                "contentVersion": "1.0.0.0"
+            },
+            "parameters": {
+                "virtualNetworkName": {
+                    "value": "[variables('virtualNetworkName')]"
+                },
+                "virtualNetworkAddressRange": {
+                    "value": "[parameters('virtualNetworkAddressRange')]"
+                },
+                "subnetName": {
+                    "value": "[variables('SubnetName')]"
+                },
+                "subnetRange": {
+                    "value": "[parameters('subnetAddressPrefix')]"
+                }
+            }
+        }
+    }, 
+     {
         "type": "Microsoft.Network/loadBalancers",
-        "name": "[variables('adLBName')]",
+        "name": "[variables('loadbalancerName')]",
         "apiVersion": "2016-03-30",
         "location": "[parameters('location')]",
         "dependsOn": [
-            "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+            "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPname'))]"
         ],
         "properties": {
             "frontendIPConfigurations": [
                 {
-                    "name": "[variables('adLBFE')]",
+                    "name": "[variables('lbfe-name')]",
                     "properties": {
                         "publicIPAddress": {
-                            "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+                            "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPName'))]"
                         }
                     }
                 }
             ],
             "backendAddressPools": [
                 {
-                    "name": "[variables('adLBBE')]"
+                    "name": "[variables('lbbe-name')]"
                 }
             ],
             "inboundNatRules": [
                 {
-                    "name": "[variables('adRDPNAT')]",
+                    "name": "[variables('lbnat-name')]",
                     "properties": {
                         "frontendIPConfiguration": {
-                            "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', variables('adLBName'), variables('adLBFE'))]"
+                            "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', variables('loadbalancerName'), variables('lbfe-name'))]"
                         },
                         "protocol": "tcp",
-                        "frontendPort": 3389,
-                        "backendPort": 3389,
+                        "frontendPort": "[parameters('lbfe-port')]",
+                        "backendPort": "[parameters('lbbe-port')]",
                         "enableFloatingIP": false
                     }
                 }
             ]
         }
     },
-
+    {
+        "type": "Microsoft.Network/networkInterfaces",
+        "name": "[variables('NicIPname')]",
+        "apiVersion": "2016-03-30",
+        "location": "[parameters('location')]",
+        "dependsOn": [
+            "Microsoft.Resources/deployments/VNet",
+            "[resourceId('Microsoft.Network/loadBalancers', variables('loadbalancerName'))]"
+        ],
+        "properties": {
+            "ipConfigurations": [
+                {
+                    "name": "ipconfig1",
+                    "properties": {
+                        "privateIPAllocationMethod": "Static",
+                        "privateIPAddress": "[parameters('NicIP')]",
+                        "subnet": {
+                            "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('SubnetName'))]"
+                        },
+                        "loadBalancerBackendAddressPools": [
+                            {
+                                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadbalancerName'), variables('lbbe-name'))]"
+                            }
+                        ],
+                        "loadBalancerInboundNatRules": [
+                            {
+                                "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules', variables('loadbalancerName'), variables('lbnat-name'))]"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "type": "Microsoft.Compute/virtualMachines",
+        "name": "[parameters('MachineName')]",
+        "apiVersion": "2017-03-30",
+        "location": "[parameters('location')]",
+        "dependsOn": [
+            "[resourceId('Microsoft.Network/networkInterfaces', variables('NicIPname'))]",
+            "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetname'))]",
+            "[resourceId('Microsoft.Network/loadBalancers', variables('loadbalancerName'))]"
+        ],
+        "properties": {
+            "hardwareProfile": {
+                "vmSize": "Standard_DS2_v3"
+            },
+            "availabilitySet": {
+                "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetname'))]"
+            },
+            "osProfile": {
+                "computerName": "[parameters('MachineName')]",
+                "adminUsername": "[parameters('adminUsername')]",
+                "adminPassword": "[parameters('adminPassword')]"
+            },
+            "storageProfile": {
+                "imageReference": {
+                    "publisher": "MicrosoftWindowsServer",
+                    "offer": "WindowsServer",
+                    "sku": "2016-Datacenter",
+                    "version": "latest"
+                },
+                "osDisk": {
+                    "name": "[concat(parameters('MachineName'),'_OSDisk')]",
+                    "caching": "ReadWrite",
+                    "createOption": "FromImage",
+                    "managedDisk": {
+                        "storageAccountType": "Standard_LRS"
+                    }
+                },
+                "dataDisks": [
+                    {
+                        "name": "[concat(parameters('MachineName'),'_DataDisk')]",
+                        "caching": "None",
+                        "createOption": "Empty",
+                        "diskSizeGB": 1024,
+                        "managedDisk": {
+                            "storageAccountType": "Standard_LRS"
+                        },
+                        "lun": 0
+                    }
+                ]
+            },
+            "networkProfile": {
+                "networkInterfaces": [
+                    {
+                        "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('NicIPname'))]"
+                    }
+                ]
+            }
+        }
+    }
     ]    
 }
