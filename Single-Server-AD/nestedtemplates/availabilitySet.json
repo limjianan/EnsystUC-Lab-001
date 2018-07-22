@@ -15,11 +15,12 @@
             "metadata": {
                 "description": "Availability Set unique number"
             }
-        },
+        }
+    },
     "variables": {
         "availabilitySetname": "[concat(parameters('resourcePrefix'),'-AS-',parameters('availabilitySetvar'))]"
-        }
-    },   
+        },
+       
     "resources": [
         {
             "type": "Microsoft.Compute/availabilitySets",
