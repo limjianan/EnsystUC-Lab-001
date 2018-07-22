@@ -166,25 +166,20 @@
         }
     },
     {
-    "type": "Microsoft.Compute/availabilitySets",
-    "name": "[variables('availabilitySetname')]",
-    "apiVersion": "2015-06-15",
-    "location": "[resourceGroup().location]",
-    "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-            "uri": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/availabilityset.json', parameters('_artifactsLocationSasToken'))]",
-            "contentVersion": "1.0.0.0"
+        "type": "Microsoft.Compute/availabilitySets",
+        "name": "[variables('availabilitySetname')]",
+        "apiVersion": "2015-06-15",
+        "location": "[resourceGroup().location]",
+        "tags": {
+            "displayName": "[variables('availabilitySetname')]"
         },
-        "parameters": {
- 
-            "availabilitySetvar": {
-                "value": "001"
-            }
-
-            }
-        }
-    },
+        "properties": {               
+            "PlatformUpdateDomainCount": 20,
+            "PlatformFaultDomainCount": 2},
+            "sku": {
+                "name": "Aligned"
+                }
+        },
     {
         "type": "Microsoft.Resources/deployments",
         "name": "VNet",
