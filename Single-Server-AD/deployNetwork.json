@@ -168,7 +168,7 @@
     {
         "type": "Microsoft.Compute/availabilitySets",
         "name": "[variables('availabilitySetname')]",
-        "apiVersion": "2015-06-15",
+        "apiVersion": "2017-03-30",
         "location": "[resourceGroup().location]",
         "tags": {
             "displayName": "[variables('availabilitySetname')]"
@@ -180,7 +180,7 @@
         "sku": {
             "name": "Aligned"
             }
-        },
+    },
     {
         "type": "Microsoft.Resources/deployments",
         "name": "VNet",
