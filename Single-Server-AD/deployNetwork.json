@@ -175,10 +175,11 @@
         },
         "properties": {               
             "PlatformUpdateDomainCount": 20,
-            "PlatformFaultDomainCount": 2},
-            "sku": {
-                "name": "Aligned"
-                }
+            "PlatformFaultDomainCount": 2
+        },
+        "sku": {
+            "name": "Aligned"
+            }
         },
     {
         "type": "Microsoft.Resources/deployments",
