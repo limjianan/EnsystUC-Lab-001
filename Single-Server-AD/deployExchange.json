@@ -383,11 +383,11 @@
       {
         "apiVersion": "2017-03-30",
         "type": "Microsoft.Compute/virtualMachines/extensions",
-        "name": "[concat(parameters('MachineName'),'/deployExchange')]",
+        "name": "[concat(parameters('MachineName'),'/Microsoft.Powershell.DSC')]",
         "location": "[parameters('location')]",
         "dependsOn": [
           "[concat('Microsoft.Compute/virtualMachines/', parameters('MachineName'))]",
-          "[concat('Microsoft.Compute/virtualMachines/', parameters('MachineName'),'/joindomain')]"
+          "[concat('Microsoft.Compute/virtualMachines/', parameters('MachineName'),'/extensions/joindomain')]"
         ],
         "properties": {
             "publisher": "Microsoft.Powershell",
