@@ -8,6 +8,20 @@
                 "description": "The DNS prefix for the public IP address used by the Load Balancer"
             }
         },
+        "storageAccountType": {
+            "type": "string",
+            "allowedValues": [
+              "Standard_LRS",
+              "Standard_GRS",
+              "Standard_RAGRS",
+              "Standard_ZRS",
+              "Premium_LRS"
+            ],
+            "metadata": {
+              "description": "The type of the Storage Account created"
+            },
+            "defaultValue": "Standard_LRS"
+        },
         "_artifactsLocation": {
             "type": "string",
             "metadata": {
@@ -131,10 +145,6 @@
                 "description": "The machine Name to be created"
             }
         }
-
-        
-        
-        
     },
     "variables": {
         "publicIPname": "[concat(parameters('resourcePrefix'),'-PIP-',parameters('publicIPvar'))]",
@@ -145,7 +155,11 @@
         "lbbe-name":"[concat(variables('loadbalancerName'),'-BE-',parameters('lbbe-port'))]",
         "lbnat-name":"[concat('FE-',parameters('lbfe-port'),'-BE-',parameters('lbbe-port'))]",
         "SubnetName":"[concat('Subnet-',replace(replace(parameters('subnetAddressvar'),'.','_'),'/','-Mask-'))]",
-        "NicIPname":"[concat('NIC-',replace(parameters('NicIP'),'.','_'))]"
+        "NicIPname":"[concat('NIC-',replace(parameters('NicIP'),'.','_'))]",
+        "vnetwithDNSTemplateUri":"[concat(parameters('_artifactsLocation'), '/nestedtemplates/vnet-with-dns-server.json', parameters('_artifactsLocationSasToken'))]",
+        "DSCModuleUrl":"[concat(parameters('_artifactsLocation'),'CreateADDomain-With-Data.zip', parameters('_artifactsLocationSasToken'))]",
+        "DSCConfigurationFunction":"CreateADPDC-with-data.ps1\\CreateADPDC-with-data",
+        "DataBlobUri": "[concat(parameters('_artifactsLocation'),'CreateADDomain-With-Data.psd1', parameters('_artifactsLocationSasToken'))]"
 
         
     },
@@ -315,7 +329,7 @@
                     "caching": "ReadWrite",
                     "createOption": "FromImage",
                     "managedDisk": {
-                        "storageAccountType": "Standard_LRS"
+                        "storageAccountType": "[parameters('storageAccountType')]"
                     }
                 },
                 "dataDisks": [
@@ -325,7 +339,7 @@
                         "createOption": "Empty",
                         "diskSizeGB": 1024,
                         "managedDisk": {
-                            "storageAccountType": "Standard_LRS"
+                            "storageAccountType": "[parameters('storageAccountType')]"
                         },
                         "lun": 0
                     }
@@ -354,8 +368,8 @@
                 "typeHandlerVersion": "2.19",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
-                    "ModulesUrl": "[concat(parameters('_artifactsLocation'), '/DSC/CreateADPDC.zip', parameters('_artifactsLocationSasToken'))]",
-                    "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
+                    "ModulesUrl": "[variables('DSCModuleUrl')]",
+                    "ConfigurationFunction": "[variables('DSCConfigurationFunction')]",
                     "Properties": {
                         "DomainName": "[parameters('domainName')]",
                         "AdminCreds": {
@@ -367,7 +381,8 @@
                 "protectedSettings": {
                     "Items": {
                         "AdminPassword": "[parameters('adminPassword')]"
-                    }
+                    },
+                    "DataBlobUri": "[variables('DataBlobUri')]"
                 }
             }
         }
@@ -383,7 +398,7 @@
     "properties": {
         "mode": "Incremental",
         "templateLink": {
-            "uri": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/vnet-with-dns-server.json', parameters('_artifactsLocationSasToken'))]",
+            "uri": "[variables('vnetwithDNSTemplateUri')]",
             "contentVersion": "1.0.0.0"
         },
         "parameters": {
