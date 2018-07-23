@@ -13,8 +13,8 @@
         [Int]$RetryCount=20,
         [Int]$RetryIntervalSec=30
     )
-
-    Import-DscResource -ModuleName xActiveDirectory, xStorage, xNetworking, PSDesiredStateConfiguration, xPendingReboot,cChoco,xExchange
+    $netbios=$DomainName.split(“.”)[0]
+    Import-DscResource -ModuleName xActiveDirectory, StorageDsc, xNetworking, PSDesiredStateConfiguration, xPendingReboot,cChoco,xExchange
     [System.Management.Automation.PSCredential ]$DomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
     [System.Management.Automation.PSCredential ]$storageCredential = New-Object System.Management.Automation.PSCredential ("AZure\limjafile", $storageKey)
 
@@ -249,18 +249,34 @@
             imagePath = "C:\ExchangeInstall\ExchangeServer2016-x64-cu10.iso"
             DriveLetter = "S"
         }
-        
+
         WaitForVolume WaitForISO {
         DriveLetter      = 'S'
         RetryIntervalSec = $RetryIntervalSec
         RetryCount       = $RetryCount
         }
 
+        #Checks if a reboot is needed before installing Exchange
         xPendingReboot BeforeExchangeInstall
         {
             Name      = "BeforeExchangeInstall"
-             DependsOn  = '[File]ExchangeISODownload'
+            DependsOn  = '[File]ExchangeBinaries'
         }
- 
+
+        #Does the Exchange install. Verify directory with exchange binaries
+        xExchInstall InstallExchange
+        {
+            Path       = "C:\Exch\Setup.exe"
+            Arguments  = "/mode:Install /role:Mailbox /OrganizationName:""$netbios"" /Iacceptexchangeserverlicenseterms"
+            Credential = $DomainCreds
+            DependsOn  = '[xPendingReboot]BeforeExchangeInstall'
+        }
+
+        #Sees if a reboot is required after installing Exchange
+        xPendingReboot AfterExchangeInstall
+        {
+            Name      = "AfterExchangeInstall"
+            DependsOn = '[xExchInstall]InstallExchange'
+        }
     }
 }
