@@ -78,20 +78,6 @@
                 "description": "back end lb port"
             }
         },
-        "resourcePrefix":{
-            "type": "string",
-            "DefaultValue":"[resourceGroup().name]",
-            "metadata": {
-                "description": "first few character"
-            }
-        },
-        "vnetvar":{
-            "type": "string",
-            "DefaultValue":"01",
-            "metadata": {
-                "description": "Vnet ID number"
-            }
-        },
         "virtualNetworkAddressRange":{
             "type": "string",
             "DefaultValue":"10.0.0.0/16",
@@ -104,13 +90,6 @@
             "DefaultValue":"10.0.0.0/24",
             "metadata": {
                 "description": "subnet range"
-            }
-        },
-        "subnetAddressvar":{
-            "type": "string",
-            "DefaultValue":"01",
-            "metadata": {
-                "description": "subnet name"
             }
         },
         "NicIP":{
@@ -147,16 +126,18 @@
         }
     },
     "variables": {
-        "publicIPname": "[concat(parameters('resourcePrefix'),'-PIP-',parameters('publicIPvar'))]",
-        "virtualNetworkName": "[concat(parameters('resourcePrefix'),'-VNET',parameters('vnetvar'))]",
-        "availabilitySetname": "[concat(parameters('resourcePrefix'),'-AS-',parameters('availabilitySetvar'))]",
-        "loadbalancerName": "[concat(parameters('resourcePrefix'),'-LB-',parameters('LoadBalancervar'))]",
+        "publicIPname": "[concat('PIP-',parameters('publicIPvar'))]",
+        "virtualNetworkName": "[concat('VNET-',replace(replace(parameters('virtualNetworkAddressRange'),'.','_'),'/','-Mask-'))]",
+        "availabilitySetname": "[concat('AS-',parameters('availabilitySetvar'))]",
+        "loadbalancerName": "[concat('LB-',parameters('LoadBalancervar'))]",
         "lbfe-name":"[concat(variables('loadbalancerName'),'-FE-',parameters('lbfe-port'))]",
         "lbbe-name":"[concat(variables('loadbalancerName'),'-BE-',parameters('lbbe-port'))]",
         "lbnat-name":"[concat('FE-',parameters('lbfe-port'),'-BE-',parameters('lbbe-port'))]",
-        "SubnetName":"[concat('Subnet-',replace(replace(parameters('subnetAddressvar'),'.','_'),'/','-Mask-'))]",
+        "SubnetName":"[concat('Subnet-',replace(replace(parameters('subnetAddressPrefix'),'.','_'),'/','-Mask-'))]",
         "NicIPname":"[concat('NIC-',replace(parameters('NicIP'),'.','_'))]",
+        "ipconfigName":"[concat('ipconfig-',replace(parameters('NicIP'),'.','_'))]",
         "vnetwithDNSTemplateUri":"[concat(parameters('_artifactsLocation'), '/nestedtemplates/vnet-with-dns-server.json', parameters('_artifactsLocationSasToken'))]",
+        "vnetTemplateUri":"[concat(parameters('_artifactsLocation'), '/nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
         "DSCModuleUrl":"[concat(parameters('_artifactsLocation'),'CreateADDomain-With-Data.zip', parameters('_artifactsLocationSasToken'))]",
         "DSCConfigurationFunction":"CreateADPDC-with-data.ps1\\CreateADPDC-with-data",
         "DataBlobUri": "[concat(parameters('_artifactsLocation'),'CreateADDomain-With-Data.psd1', parameters('_artifactsLocationSasToken'))]"
@@ -202,7 +183,7 @@
         "properties": {
             "mode": "Incremental",
             "templateLink": {
-                "uri": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
+                "uri": "[variables('vnetTemplateUri')]",
                 "contentVersion": "1.0.0.0"
             },
             "parameters": {
@@ -273,7 +254,7 @@
         "properties": {
             "ipConfigurations": [
                 {
-                    "name": "ipconfig1",
+                    "name": "[variables('ipconfigName')]",
                     "properties": {
                         "privateIPAllocationMethod": "Static",
                         "privateIPAddress": "[parameters('NicIP')]",
