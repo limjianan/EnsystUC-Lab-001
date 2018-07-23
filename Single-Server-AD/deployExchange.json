@@ -2,10 +2,16 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-           "dnsPrefix": {
+        "dnsPrefix": {
             "type": "string",
             "metadata": {
                 "description": "The DNS prefix for the public IP address used by the Load Balancer"
+            }
+        },
+        "storageKey":{
+            "type":"string",
+            "metadata":{
+                "description": " This is to access the file store"
             }
         },
         "storageAccountType": {
@@ -392,6 +398,7 @@
                 "ModulesUrl": "[variables('DSCModuleUrl')]",
                 "ConfigurationFunction": "[variables('DSCConfigurationFunction')]",
                 "Properties": {
+                    "storageKey": "[parameters('storageKey')]",
                     "DomainName": "[parameters('domainName')]",
                     "AdminCreds": {
                         "UserName": "[parameters('adminUsername')]",

@@ -8,14 +8,15 @@
         [Parameter(Mandatory)]
         [System.Management.Automation.PSCredential]$Admincreds,
 
+
+        [string]$storageKey,
         [Int]$RetryCount=20,
         [Int]$RetryIntervalSec=30
     )
 
     Import-DscResource -ModuleName xActiveDirectory, xStorage, xNetworking, PSDesiredStateConfiguration, xPendingReboot,cChoco,xExchange
     [System.Management.Automation.PSCredential ]$DomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
-    $Interface=Get-NetAdapter|Where-Object Name -Like "Ethernet*"|Select-Object -First 1
-    $InterfaceAlias=$($Interface.Name)
+    [System.Management.Automation.PSCredential ]$storageCredential = New-Object System.Management.Automation.PSCredential ("AZure\limjafile", $storageKey)
 
     Node localhost
     {
@@ -196,8 +197,8 @@
             Name = 'RSAT-ADDS'
         }
 	cChocoInstaller installChoco
-        { 
-            InstallDir = "C:\choco"
+        {
+            InstallDir = "C:\ProgramData\chocolatey"
         }
 
         cChocoFeature allowGlobalConfirmation {
@@ -226,134 +227,40 @@
             RetryCount = $RetryCount
         }
 
-        xDisk ADDataDisk {
+        xDisk ExchangeDataDisk {
             DiskNumber = 2
             DriveLetter = "F"
             DependsOn = "[xWaitForDisk]Disk2"
         }
-<#
-        cDiskNoRestart ADDataDisk
+
+        xPendingReboot PriorNext {
+            Name = "PriorNext"
+            DependsOn = "[xDisk]ExchangeDataDisk"
+        }
+        File ExchangeISODownload {
+            DestinationPath = "C:\ExchangeInstall"
+            Credential = $storageCredential
+            Ensure = "Present"
+            SourcePath = "\\limjafile.file.core.windows.net\software\ExchangeServer2016-x64-cu10.iso"
+            Type = "File"
+        }
+
+        MountImage ExchangeISO {
+            imagePath = "C:\ExchangeInstall\ExchangeServer2016-x64-cu10.iso"
+            DriveLetter = "S"
+        }
+        
+        WaitForVolume WaitForISO {
+        DriveLetter      = 'S'
+        RetryIntervalSec = $RetryIntervalSec
+        RetryCount       = $RetryCount
+        }
+
+        xPendingReboot BeforeExchangeInstall
         {
-            DiskNumber = 2
-            DriveLetter = "F"
+            Name      = "BeforeExchangeInstall"
+             DependsOn  = '[File]ExchangeISODownload'
         }
-#>
-  
-        xADDomain FirstDS
-        {
-            DomainName = $DomainName
-            DomainAdministratorCredential = $DomainCreds
-            SafemodeAdministratorPassword = $DomainCreds
-            DatabasePath = "F:\NTDS"
-            LogPath = "F:\NTDS"
-            SysvolPath = "F:\SYSVOL"
-	        DependsOn = "[xDisk]ADDataDisk"
-        }
-		        xWaitForADDomain DscForestWait
-        {
-            DomainName = $DomainName
-            DomainUserCredential = $DomainCreds
-            RetryCount = $RetryCount
-            RetryIntervalSec = $RetryIntervalSec
-            DependsOn = "[xADDomain]FirstDS"
-        }
-
-
-        ### OUs ###
-        $DomainRoot = "DC=$($DomainName -replace '\.',',DC=')"
-        $DependsOn_OU = @()
-
-        ForEach ($RootOU in $ConfigurationData.NonNodeData.RootOUs) {
-
-            xADOrganizationalUnit "OU_$RootOU"
-            {
-                Name = $RootOU
-                Path = $DomainRoot
-                ProtectedFromAccidentalDeletion = $true
-                Description = "OU for $RootOU"
-                Credential = $DomainCred
-                Ensure = 'Present'
-                DependsOn = '[xADRecycleBin]RecycleBin'
-            }
-
-            ForEach ($ChildOU in $ConfigurationData.NonNodeData.ChildOUs) {
-
-                xADOrganizationalUnit "OU_$($RootOU)_$ChildOU"
-                {
-                    Name = $ChildOU
-                    Path = "OU=$RootOU,$DomainRoot"
-                    ProtectedFromAccidentalDeletion = $true
-                    Credential = $DomainCred
-                    Ensure = 'Present'
-                    DependsOn = "[xADOrganizationalUnit]OU_$RootOU"
-                }
-
-                $DependsOn_OU += "[xADOrganizationalUnit]OU_$($RootOU)_$ChildOU"
-            }
-
-        }
-
-
-        ### USERS ###
-        $DependsOn_User = @()
-        $Users = $ConfigurationData.NonNodeData.UserData | ConvertFrom-CSV
-        ForEach ($User in $Users) {
-
-            xADUser "NewADUser_$($User.UserName)"
-            {
-                DomainName = $DomainName
-                Ensure = 'Present'
-                UserName = $User.UserName
-                JobTitle = $User.Title
-                Path = "OU=Users,OU=$($User.Dept),$DomainRoot"
-                Enabled = $true
-                Password = New-Object -TypeName PSCredential -ArgumentList 'JustPassword', (ConvertTo-SecureString -String $User.Password -AsPlainText -Force)
-                DependsOn = $DependsOn_OU
-            }
-            $DependsOn_User += "[xADUser]NewADUser_$($User.UserName)"
-        }
-
-        1..$ConfigurationData.NonNodeData.TestObjCount | ForEach-Object {
-
-            xADUser "NewADUser_$_"
-            {
-                DomainName = $DomainName
-                Ensure = 'Present'
-                UserName = "TestUser$_"
-                Enabled = $false  # Must specify $false if disabled and no password
-                DependsOn = '[xADRecycleBin]RecycleBin'
-            }
-
-        }
-
-
-        ### GROUPS ###
-        ForEach ($RootOU in $ConfigurationData.NonNodeData.RootOUs) {
-            xADGroup "NewADGroup_$RootOU"
-            {
-                GroupName = "G_$RootOU"
-                GroupScope = 'Global'
-                Description = "Global group for $RootOU"
-                Category = 'Security'
-                Members = ($Users | Where-Object {$_.Dept -eq $RootOU}).UserName
-                Path = "OU=Groups,OU=$RootOU,$DomainRoot"
-                Ensure = 'Present'
-                DependsOn = $DependsOn_User
-            }
-        }
-
-        1..$ConfigurationData.NonNodeData.TestObjCount | ForEach-Object {
-
-            xADGroup "NewADGroup_$_"
-            {
-                GroupName = "TestGroup$_"
-                GroupScope = 'Global'
-                Category = 'Security'
-                Members = "TestUser$_"
-                Ensure = 'Present'
-                DependsOn = "[xADUser]NewADUser_$_"
-            }
-
-        }
-   }
+ 
+    }
 }
