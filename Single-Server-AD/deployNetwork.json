@@ -27,7 +27,7 @@
             "metadata": {
                 "description": "The location of resources, such as templates and DSC modules, that the template depends on"
             },
-            "defaultValue": "https://raw.githubusercontent.com/limjianan/EnsystUC-Lab-001/master/Single-Server-AD/"
+            "defaultValue": "https://raw.githubusercontent.com/limjianan/EnsystUC-Lab-001/master/Single-Server-AD"
         },
         "_artifactsLocationSasToken": {
             "type": "securestring",
@@ -138,9 +138,9 @@
         "ipconfigName":"[concat('ipconfig-',replace(parameters('NicIP'),'.','_'))]",
         "vnetwithDNSTemplateUri":"[concat(parameters('_artifactsLocation'), '/nestedtemplates/vnet-with-dns-server.json', parameters('_artifactsLocationSasToken'))]",
         "vnetTemplateUri":"[concat(parameters('_artifactsLocation'), '/nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
-        "DSCModuleUrl":"[concat(parameters('_artifactsLocation'),'CreateADDomain-With-Data.zip', parameters('_artifactsLocationSasToken'))]",
+        "DSCModuleUrl":"[concat(parameters('_artifactsLocation'),'/DSC/CreateADPDC-with-Data.zip', parameters('_artifactsLocationSasToken'))]",
         "DSCConfigurationFunction":"CreateADPDC-with-data.ps1\\CreateADPDC-with-data",
-        "DataBlobUri": "[concat(parameters('_artifactsLocation'),'CreateADDomain-With-Data.psd1', parameters('_artifactsLocationSasToken'))]"
+        "DataBlobUri": "[concat(parameters('_artifactsLocation'),'/DSC/CreateADPDC-with-Data.psd1', parameters('_artifactsLocationSasToken'))]"
 
         
     },
