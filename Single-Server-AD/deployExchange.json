@@ -304,19 +304,7 @@
                     "managedDisk": {
                         "storageAccountType": "[parameters('storageAccountType')]"
                     }
-                },
-                "dataDisks": [
-                    {
-                        "name": "[concat(parameters('MachineName'),'_DataDisk')]",
-                        "caching": "None",
-                        "createOption": "Empty",
-                        "diskSizeGB": 1024,
-                        "managedDisk": {
-                            "storageAccountType": "[parameters('storageAccountType')]"
-                        },
-                        "lun": 0
-                    }
-                ]
+                }
             },
             "networkProfile": {
                 "networkInterfaces": [

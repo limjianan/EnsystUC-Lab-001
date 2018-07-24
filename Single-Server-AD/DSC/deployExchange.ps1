@@ -14,7 +14,7 @@
         [Int]$RetryIntervalSec=30
     )
     $netbios=$DomainName.split(“.”)[0]
-    Import-DscResource -ModuleName xActiveDirectory, StorageDsc, xNetworking, PSDesiredStateConfiguration, xPendingReboot,cChoco,xExchange
+    Import-DscResource -ModuleName xActiveDirectory, StorageDsc, xNetworking, PSDesiredStateConfiguration, xPendingReboot, cChoco, xExchange
     [System.Management.Automation.PSCredential ]$DomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
     [System.Management.Automation.PSCredential ]$storageCredential = New-Object System.Management.Automation.PSCredential ("AZure\limjafile", $storageKey)
 
@@ -23,8 +23,9 @@
         LocalConfigurationManager
         {
             RebootNodeIfNeeded = $true
+            DebugMode = 'ForceModuleImport'
         }
-
+      
        #Installs Required Components for Exchange (note: there is 1 planned automatic reboot)
         WindowsFeature ASHTTP
         {
@@ -208,35 +209,17 @@
         }
 
         cChocoPackageInstaller ucma4 {
-            FeatureName = "ucma4"
+            Name = "ucma4"
             Ensure = 'Present'
 	    DependsOn = "[cChocoInstaller]installChoco"
         }
 
         cChocoPackageInstaller vcredist2013 {
-            FeatureName = "vcredist2013"
+            Name = "vcredist2013"
             Ensure = 'Present'
 	    DependsOn = "[cChocoInstaller]installChoco"
         }
 
-
-        xWaitforDisk Disk2
-        {
-            DiskNumber = 2
-            RetryIntervalSec =$RetryIntervalSec
-            RetryCount = $RetryCount
-        }
-
-        xDisk ExchangeDataDisk {
-            DiskNumber = 2
-            DriveLetter = "F"
-            DependsOn = "[xWaitForDisk]Disk2"
-        }
-
-        xPendingReboot PriorNext {
-            Name = "PriorNext"
-            DependsOn = "[xDisk]ExchangeDataDisk"
-        }
         File ExchangeISODownload {
             DestinationPath = "C:\ExchangeInstall"
             Credential = $storageCredential
