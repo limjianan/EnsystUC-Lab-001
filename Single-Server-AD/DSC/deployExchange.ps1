@@ -266,7 +266,7 @@
         #Does the Exchange install. Verify directory with exchange binaries
         xExchInstall InstallExchange
         {
-            Path       = "C:\Exch\Setup.exe"
+            Path       = "s:\Setup.exe"
             Arguments  = "/mode:Install /role:Mailbox /OrganizationName:""$netbios"" /Iacceptexchangeserverlicenseterms"
             Credential = $DomainCreds
             DependsOn  = '[xPendingReboot]BeforeExchangeInstall'
