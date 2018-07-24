@@ -241,7 +241,6 @@
         "apiVersion": "2016-03-30",
         "location": "[parameters('location')]",
         "dependsOn": [
-            "Microsoft.Resources/deployments/VNet",
             "[resourceId('Microsoft.Network/loadBalancers', variables('loadbalancerName'))]"
         ],
         "properties": {
