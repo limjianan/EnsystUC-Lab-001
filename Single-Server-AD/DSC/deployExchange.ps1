@@ -25,7 +25,7 @@
         {
             RebootNodeIfNeeded = $true
         }
-      
+
        #Installs Required Components for Exchange (note: there is 1 planned automatic reboot)
         WindowsFeature ASHTTP
         {
