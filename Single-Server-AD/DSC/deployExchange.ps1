@@ -202,12 +202,6 @@
             InstallDir = "C:\ProgramData\chocolatey"
         }
 
-        cChocoFeature allowGlobalConfirmation {
-            FeatureName = "allowGlobalConfirmation"
-            Ensure = 'Present'
-	    DependsOn = "[cChocoInstaller]installChoco"
-        }
-
         cChocoPackageInstaller ucma4 {
             Name = "ucma4"
             Ensure = 'Present'
