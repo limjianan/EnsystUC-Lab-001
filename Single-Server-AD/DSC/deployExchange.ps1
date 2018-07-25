@@ -237,7 +237,7 @@
         xPendingReboot BeforeExchangeInstall
         {
             Name      = "BeforeExchangeInstall"
-            DependsOn  = '[File]ExchangeBinaries'
+            DependsOn  = '[File]ExchangeISODownload'
         }
 
         #Does the Exchange install. Verify directory with exchange binaries
