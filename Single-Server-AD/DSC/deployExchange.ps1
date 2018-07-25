@@ -14,16 +14,16 @@
         [Int]$RetryIntervalSec=30
     )
     $netbios=$DomainName.split(“.”)[0]
+    $storagePass=ConvertTo-SecureString -String $storageKey -AsPlainText -Force
     Import-DscResource -ModuleName xActiveDirectory, StorageDsc, xNetworking, PSDesiredStateConfiguration, xPendingReboot, cChoco, xExchange
-    [System.Management.Automation.PSCredential ]$DomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
-    [System.Management.Automation.PSCredential ]$storageCredential = New-Object System.Management.Automation.PSCredential ("AZure\limjafile", $storageKey)
+    [System.Management.Automation.PSCredential]$DomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
+    [System.Management.Automation.PSCredential]$storageCredential = New-Object System.Management.Automation.PSCredential ("AZURE\limjafile", $storagePass)
 
     Node localhost
     {
         LocalConfigurationManager
         {
             RebootNodeIfNeeded = $true
-            DebugMode = 'ForceModuleImport'
         }
       
        #Installs Required Components for Exchange (note: there is 1 planned automatic reboot)
