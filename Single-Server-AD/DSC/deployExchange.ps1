@@ -27,16 +27,6 @@
         }
 
        #Installs Required Components for Exchange (note: there is 1 planned automatic reboot)
-        WindowsFeature ASHTTP
-        {
-            Ensure = 'Present'
-            Name = 'AS-HTTP-Activation'
-        }
-        WindowsFeature DesktopExp
-        {
-            Ensure = 'Present'
-            Name = 'Desktop-Experience'
-        }
          WindowsFeature NetFW45
         {
             Ensure = 'Present'
@@ -215,7 +205,7 @@
         }
 
         File ExchangeISODownload {
-            DestinationPath = "C:\ExchangeInstall"
+            DestinationPath = "C:\ExchangeInstall\ExchangeServer2016-x64-cu10.iso"
             Credential = $storageCredential
             Ensure = "Present"
             SourcePath = "\\limjafile.file.core.windows.net\software\ExchangeServer2016-x64-cu10.iso"
