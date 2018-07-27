@@ -198,6 +198,13 @@
 	    DependsOn = "[cChocoInstaller]installChoco"
         }
 
+        cChocoPackageInstaller NETframework471 {
+            Name = "dotnet4.7.1"
+            Ensure = 'Present'
+	    DependsOn = "[cChocoInstaller]installChoco"
+        }
+
+
         cChocoPackageInstaller vcredist2013 {
             Name = "vcredist2013"
             Ensure = 'Present'
