@@ -1,6 +1,6 @@
-﻿@{ 
-    AllNodes = @( 
-        @{ 
+﻿@{
+    AllNodes = @(
+        @{
             Nodename = 'localhost'
             PSDscAllowDomainUser = $true
         }
@@ -10,19 +10,19 @@
 
         UserData = @'
 UserName,Password,Dept,Title
-Alice,P@ssw0rd,Accounting,Manager
-Bob,P@ssw0rd,IT,Manager
-Charlie,P@ssw0rd,Marketing,Manager
-Debbie,P@ssw0rd,Operations,Manager
-Eddie,P@ssw0rd,Accounting,Specialist
-Frieda,P@ssw0rd,IT,Specialist
-George,P@ssw0rd,Marketing,Specialist
-Harriet,P@ssw0rd,Operations,Specialist
+Alastair,P@ssw0rd,Project Services,Manager
+Mark,P@ssw0rd,Managed Services,Manager
+Song,P@ssw0rd,Presales,Manager
+Steve,P@ssw0rd,Sales,Manager
+James,P@ssw0rd,Presales,Specialist
+Neil,P@ssw0rd,Sales,Specialist
+Jian,P@ssw0rd,Project Services,Specialist
+Ashwin,P@ssw0rd,Operations,Specialist
 '@
 
-        RootOUs = 'Accounting','IT','Marketing','Operations'
-        ChildOUs = 'Users','Computers','Groups'
+        RootOUs = 'EnsystUC'
+        ChildOUs = 'Users','Computers','Role Groups','Resource Group','Admin','Service Accounts','ExchangeRelated'
         TestObjCount = 5
 
     }
-} 
+}

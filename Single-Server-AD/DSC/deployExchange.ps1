@@ -187,6 +187,11 @@
             Ensure = 'Present'
             Name = 'RSAT-ADDS'
         }
+              WindowsFeature NET-WCF-HTTP-Activation45
+        {
+            Ensure = 'Present'
+            Name = 'NET-WCF-HTTP-Activation45'
+        }
 	cChocoInstaller installChoco
         {
             InstallDir = "C:\ProgramData\chocolatey"
