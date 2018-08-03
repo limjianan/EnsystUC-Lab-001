@@ -17,6 +17,7 @@
     Import-DscResource -ModuleName xActiveDirectory, PSDesiredStateConfiguration, xPendingReboot, cChoco, 
     Import-DSCResource -Module xSystemSecurity
     [System.Management.Automation.PSCredential]$DomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
+    $ComputerName = $ENV:ComputerName
 
     Node localhost
     {
@@ -48,5 +49,17 @@
 	    DependsOn = "[cChocoInstaller]installChoco"
         }
 
+        ForEach ($gr in $ConfigurationData.NonNodeData.Groups) {
+            xADGroup "RG_$Computername_$gr"
+            {
+                GroupName   = "RG_$Computername_$gr"
+                GroupScope  = 'DomainLocal'
+                Description = "$gr access to $computername"
+                Category    = 'Security'
+                Path        = "OU=Resource Group,OU=Groups,OU=$RootOU,$DomainRoot"
+                Ensure      = 'Present'
+                
+            }
+        }
     }
 }
