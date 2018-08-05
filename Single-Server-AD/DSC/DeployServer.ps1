@@ -49,6 +49,7 @@
 	    DependsOn = "[cChocoInstaller]installChoco"
         }
 
+        $DomainRoot = "DC=$($DomainName -replace '\.',',DC=')"
         ForEach ($gr in $ConfigurationData.NonNodeData.Groups) {
             xADGroup "RG_$Computername_$gr"
             {
@@ -56,7 +57,7 @@
                 GroupScope  = 'DomainLocal'
                 Description = "$gr access to $computername"
                 Category    = 'Security'
-                Path        = "OU=Resource Group,OU=Groups,OU=$RootOU,$DomainRoot"
+                Path        = "OU=Ensyst,$DomainRoot"
                 Ensure      = 'Present'
                 
             }

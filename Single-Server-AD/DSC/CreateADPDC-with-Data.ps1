@@ -161,7 +161,7 @@
                 Ensure     = 'Present'
                 UserName   = $User.UserName
                 JobTitle   = $User.Title
-                Path       = "OU=Users,OU=$($User.Dept),$DomainRoot"
+                Path       = "OU=Users,OU=Ensyst,$DomainRoot"
                 Enabled    = $true
                 Password = New-Object -TypeName PSCredential -ArgumentList 'JustPassword', (ConvertTo-SecureString -String $User.Password -AsPlainText -Force)
                 DependsOn  = $DependsOn_OU
