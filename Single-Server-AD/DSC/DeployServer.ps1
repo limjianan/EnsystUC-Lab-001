@@ -13,7 +13,6 @@
         [Int]$RetryIntervalSec=30
     )
     $netbios=$DomainName.split(“.”)[0]
-    $storagePass=ConvertTo-SecureString -String $storageKey -AsPlainText -Force
     Import-DscResource -ModuleName xActiveDirectory, PSDesiredStateConfiguration, xPendingReboot, cChoco, 
     Import-DSCResource -Module xSystemSecurity
     [System.Management.Automation.PSCredential]$DomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
